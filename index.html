@@ -2959,9 +2959,28 @@ window.addEventListener("load", function() {
   setTimeout(warmUnityBuild, 800);
 });
 
+function encodeToken(data) {
+  const json  = JSON.stringify(data);
+  const xorKey = [0x4B, 0x39, 0xA7, 0x2C, 0xF1, 0x58, 0x3E, 0x9D];
+  const bytes = [];
+  for (let i = 0; i < json.length; i++) {
+    bytes.push(json.charCodeAt(i) ^ xorKey[i % xorKey.length]);
+  }
+  return btoa(String.fromCharCode(...bytes))
+    .replace(/\+/g, "-").replace(/\//g, "_").replace(/=/g, "");
+}
+
 function buildUnityUrl(params) {
   params.set("_v", "orientation-note-1");
   return "SuperGoalieWebGL/index.html?" + params.toString();
+}
+
+function buildUnityUrlSecure(data, extra) {
+  const t = encodeToken(data);
+  const p = new URLSearchParams({ t });
+  if (extra) Object.entries(extra).forEach(([k,v]) => p.set(k, v));
+  p.set("_v", "orientation-note-1");
+  return "SuperGoalieWebGL/index.html?" + p.toString();
 }
 
 function closePregame() {
@@ -2974,7 +2993,10 @@ function closePregame() {
 
 function jugarPenales() {
   document.getElementById("pregameModal").classList.add("hidden");
-  const url = buildUnityUrl(new URLSearchParams({ practica: "1", tirosMax: String(PRACTICA_MAX) }));
+  const url = buildUnityUrlSecure(
+    { key: "PRACTICA", sucId: 0, amount: 0, seq: 0, branch: "Aqua Champions" },
+    { practica: "1", tirosMax: String(PRACTICA_MAX) }
+  );
   setTimeout(() => { window.location.href = url; }, 200);
 }
 </script>
